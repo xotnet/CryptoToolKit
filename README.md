@@ -1,5 +1,5 @@
 # CryptoToolKit
-ToolKit for crypt/decrypt messages, files and generate random keys for crypt
+ToolKit for crypt/decrypt messages, files and generate random keys for crypt. You can use any data and password for crypt it and keep it safe
 
 > [!CAUTION]
 > Using CryptoToolKit alfa is unsecure! This is test alfa release
