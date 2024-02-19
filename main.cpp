@@ -1,9 +1,8 @@
 // Encryption ToolKit
 #include <iostream>
 #include <bitset>
-#include <sstream>
-#include <unistd.h>
-// TODO: ADD SPOOF BYTES IN BEGIN AND END BASED IN KEY TO BYPASS SIMPLE BRUTE FORCE
+#include <fstream>
+#include <random>
 void swapBits(int &bit) {
 	if (bit == 1) {bit = 0;}
 	else {bit = 1;}
@@ -20,19 +19,24 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	while (i < preBin.length()) {
 		int binInt = preBin[i] - '0';
 		int s = 0;
+		int bitCangesounter = 0;
 		while (s < key.length()) { // [ENCRYPTION] encrypting every byte
 			std::bitset<8> bits(key[s]);
 			if (bits[0] == 1) {
 				swapBits(binInt);
+				bitCangesounter += 1;
 			}
-			if (bits[1] == 1) {
+			else if (bits[1] == 1) {
 				swapBits(binInt);
+				bitCangesounter += 1;
 			}
-			if (bits[2] == 1) {
+			else if (bits[2] == 1) {
 				swapBits(binInt);
+				bitCangesounter += 1;
 			}
-			if (bits[3] == 1) {
+			else if (bits[3] == 1) {
 				swapBits(binInt);
+				bitCangesounter += 1;
 			}
 			s++; // next key char
 		}
@@ -105,15 +109,51 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 	return finalBin;
 }
 
+void cryptFile (std::string path, std::string key) {
+	std::fstream file(path);
+	std::string fileLegacyData;
+	file >> fileLegacyData;
+	file.close();
+	std::string encryptedFileData = toBitAndEncrypt(fileLegacyData, key);
+	std::fstream filein(path);
+	filein << encryptedFileData;
+	filein.close();
+}
+
+void DecryptFile (std::string path, std::string key) {
+	std::fstream file(path);
+	std::string fileEncData;
+	file >> fileEncData;
+	file.close();
+	std::string legacyFileData = toStringAndDecrypt(fileEncData, key);
+	std::fstream filein(path);
+	filein << legacyFileData;
+	filein.close();
+}
+
+std::string genKey() {
+	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	char key[64] = "";
+	std::random_device rand;
+	std::mt19937 rng(rand());
+	for (int i = 0; i<64; i++) {
+		std::uniform_int_distribution<int> dist(1,62);
+		key[i] = alphabet[dist(rand)];
+	}
+	return key;
+}
+
 int main() {
 	std::cout << "  ______                                   __              ________                   __  __    __  __    __     \n /      \\                                 /  |            /        |                 /  |/  |  /  |/  |  /  |    \n/$$$$$$  |  ______   __    __   ______   _$$ |_     ______$$$$$$$$/______    ______  $$ |$$ | /$$/ $$/  _$$ |_   \n$$ |  $$/  /      \\ /  |  /  | /      \\ / $$   |   /      \\  $$ | /      \\  /      \\ $$ |$$ |/$$/  /  |/ $$   |  \n$$ |      /$$$$$$  |$$ |  $$ |/$$$$$$  |$$$$$$/   /$$$$$$  | $$ |/$$$$$$  |/$$$$$$  |$$ |$$  $$<   $$ |$$$$$$/   \n$$ |   __ $$ |  $$/ $$ |  $$ |$$ |  $$ |  $$ | __ $$ |  $$ | $$ |$$ |  $$ |$$ |  $$ |$$ |$$$$$  \\  $$ |  $$ | __ \n$$ \\__/  |$$ |      $$ \\__$$ |$$ |__$$ |  $$ |/  |$$ \\__$$ | $$ |$$ \\__$$ |$$ \\__$$ |$$ |$$ |$$  \\ $$ |  $$ |/  |\n$$    $$/ $$ |      $$    $$ |$$    $$/   $$  $$/ $$    $$/  $$ |$$    $$/ $$    $$/ $$ |$$ | $$  |$$ |  $$  $$/ \n $$$$$$/  $$/        $$$$$$$ |$$$$$$$/     $$$$/   $$$$$$/   $$/  $$$$$$/   $$$$$$/  $$/ $$/   $$/ $$/    $$$$/  \n                    /  \\__$$ |$$ |                                                                               \n                    $$    $$/ $$ |                                                                               \n                     $$$$$$/  $$/                                                                                \n";
 	short int selectDecEnc;
 	short int selectTarget;
 	std::string key;
-	std::cout << "Select target:\n[1] Message\n[2] File (soon)\n[3] Generate key (Soon)\n: ";
+	std::cout << "Select target:\n[1] Message\n[2] File\n[3] Generate key (Soon)\n: ";
 	std::cin >> selectTarget;
-	std::cout << "Select method:\n[1] Encrypt\n[2] Decrypt\n: ";
-	std::cin >> selectDecEnc;
+	if (selectTarget != 3) {
+		std::cout << "Select method:\n[1] Encrypt\n[2] Decrypt\n: ";
+		std::cin >> selectDecEnc;
+	}
 	if (selectTarget != 3) {
 		std::cout << "Set key (password 8+ chars): ";
 		std::cin >> key;
@@ -131,6 +171,36 @@ int main() {
 		std::cin.ignore(); 
 		std::getline(std::cin, inputString);
 		std::cout << "\nDecrypted message: " << toStringAndDecrypt(inputString, key);
+	}
+	else if (selectDecEnc ==1 && selectTarget == 2) {
+		char confirm = 'n';
+		std::string inputString = "";
+		std::cout << "File path which crypt: ";
+		std::cin.ignore();
+		std::getline(std::cin, inputString);
+		std::cout << "\nConfirm overwrite file | [y] yes [n] no: ";
+		std::cin >> confirm;
+		if (confirm == 'y') {
+			cryptFile(inputString, key);
+			std::cout << "\nFile succefuly encrypted!\n";
+		} else {std::cout << "\nAbort\n";}
+	}
+	else if (selectDecEnc ==2 && selectTarget == 2) {
+		char confirm = 'n';
+		std::string inputString = "";
+		std::cout << "File path which decrypt: ";
+		std::cin.ignore();
+		std::getline(std::cin, inputString);
+		std::cout << "\nConfirm overwrite file | [y] yes [n] no: ";
+		std::cin >> confirm;
+		if (confirm == 'y') {
+			DecryptFile(inputString, key);
+			std::cout << "\nFile succefuly decrypted!\n";
+		} else {std::cout << "\nAbort\n";}
+	}
+	else if (selectTarget == 3) {
+		std::string key = genKey();
+		std::cout << "\nYour key: " + key + "\n";
 	}
 	else {main(); return 0;}
 
