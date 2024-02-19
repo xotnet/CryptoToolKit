@@ -4,6 +4,10 @@
 #include <sstream>
 #include <unistd.h>
 // TODO: ADD SPOOF BYTES IN BEGIN AND END BASED IN KEY TO BYPASS SIMPLE BRUTE FORCE
+void swapBits(int &bit) {
+	if (bit == 1) {bit = 0;}
+	else {bit = 1;}
+}
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	std::string preBin = "";
 	std::string cryptedBin = "";
@@ -13,36 +17,28 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
     }
 	std::string finalBin;
 	int i = 0;
-	while (i<preBin.length()) {
-		//std::cout << "test" << i;
+	while (i < preBin.length()) {
 		int binInt = preBin[i] - '0';
 		int s = 0;
-		while (s < key.length()) { // encrypting every byte
-			if (binInt == 0) {
-				binInt = 1;
+		while (s < key.length()) { // [ENCRYPTION] encrypting every byte
+			std::bitset<8> bits(key[s]);
+			if (bits[0] == 1) {
+				swapBits(binInt);
 			}
-			else if (binInt == 1) {
-				binInt = 0;
+			if (bits[1] == 1) {
+				swapBits(binInt);
 			}
-			if (key[s] - '0' < 10) { // if char of key is int
-				for (int u = 0; u < key[s] - '0'; u++) { // change this and next bit x times
-					int nextBitBuffer = preBin[i+1];
-					preBin[i+1] = preBin[i];
-					preBin[i] = nextBitBuffer;
-				}
+			if (bits[2] == 1) {
+				swapBits(binInt);
 			}
-			else { // if char of key is char
-				if (i != 0) { // change this and last bit
-					int lastBitBuffer = preBin[i-1];
-					preBin[i-1] = preBin[i];
-					preBin[i] = lastBitBuffer;
-				}
+			if (bits[3] == 1) {
+				swapBits(binInt);
 			}
-			s++;
+			s++; // next key char
 		}
 		finalBin = finalBin + std::to_string(binInt);
-		i++;
-	} std::cout << finalBin;
+		i++; // next bit
+	}
 	std::string toChars8bit = "";
 	i = 0;
 	int u = 0;
@@ -75,31 +71,24 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 		int binInt = toBit8[o] - '0';
 		int s = 0;
 		while (s < key.length()) { // decrypting every byte
-			if (binInt == 0) {
-				binInt = 1;
+			std::bitset<8> bits(key[s]);
+			if (bits[0] == 1) {
+				swapBits(binInt);
 			}
-			else if (binInt == 1) {
-				binInt = 0;
+			if (bits[1] == 1) {
+				swapBits(binInt);
 			}
-			if (key[s] - '0' < 10) { // if char of key is int
-				for (int u = 0; u < key[s] - '0'; u++) { // change this and next bit x times
-					int nextBitBuffer = preBin[o+1];
-					preBin[o+1] = preBin[o];
-					preBin[o] = nextBitBuffer;
-				}
+			if (bits[2] == 1) {
+				swapBits(binInt);
 			}
-			else { // if char of key is char
-				if (o != 0) { // change this and last bit
-					int lastBitBuffer = preBin[o-1];
-					preBin[o-1] = preBin[o];
-					preBin[o] = lastBitBuffer;
-				}
+			if (bits[3] == 1) {
+				swapBits(binInt);
 			}
-			s++;
+			s++; // next key char
 		}
 		preBin = preBin + std::to_string(binInt);
 		o++;
-	} std::cout << preBin << "\n";
+	}
 	i = 1;
 	int u = 0;
     while (i*8 <= preBin.length()){
@@ -134,7 +123,7 @@ int main() {
 		std::cout << "String to encrypt: ";
 		std::cin.ignore();
 		std::getline(std::cin, inputString);
-		std::cout << "\nEncrypted message (ignoring ''!): '" << toBitAndEncrypt(inputString, key) << "'\n";
+		std::cout << "\nEncrypted message (excluding forgings!): '" << toBitAndEncrypt(inputString, key) << "'\n";
 	}
 	else if (selectDecEnc == 2 && selectTarget == 1){
 		std::string inputString = "";
