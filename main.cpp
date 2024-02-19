@@ -5,7 +5,7 @@
 #include <random>
 void swapBits(int &bit) {
 	if (bit == 1) {bit = 0;}
-	else {bit = 1;}
+	else if (bit == 0) {bit = 1;}
 }
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	std::string preBin = "";
@@ -19,25 +19,16 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	while (i < preBin.length()) {
 		int binInt = preBin[i] - '0';
 		int s = 0;
-		int bitCangesounter = 0;
 		while (s < key.length()) { // [ENCRYPTION] encrypting every byte
 			std::bitset<8> bits(key[s]);
-			if (bits[0] == 1) {
-				swapBits(binInt);
-				bitCangesounter += 1;
-			}
-			else if (bits[1] == 1) {
-				swapBits(binInt);
-				bitCangesounter += 1;
-			}
-			else if (bits[2] == 1) {
-				swapBits(binInt);
-				bitCangesounter += 1;
-			}
-			else if (bits[3] == 1) {
-				swapBits(binInt);
-				bitCangesounter += 1;
-			}
+			if (bits[0] == 1) {swapBits(binInt);}
+			if (bits[1] == 0) {swapBits(binInt);}
+			if (bits[2] == 1) {swapBits(binInt);}
+			if (bits[3] == 0) {swapBits(binInt);}
+			if (bits[4] == 0) {swapBits(binInt);}
+			if (bits[5] == 0) {swapBits(binInt);}
+			if (bits[6] == 1) {swapBits(binInt);}
+			if (bits[7] == 0) {swapBits(binInt);}
 			s++; // next key char
 		}
 		finalBin = finalBin + std::to_string(binInt);
@@ -76,18 +67,14 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 		int s = 0;
 		while (s < key.length()) { // decrypting every byte
 			std::bitset<8> bits(key[s]);
-			if (bits[0] == 1) {
-				swapBits(binInt);
-			}
-			if (bits[1] == 1) {
-				swapBits(binInt);
-			}
-			if (bits[2] == 1) {
-				swapBits(binInt);
-			}
-			if (bits[3] == 1) {
-				swapBits(binInt);
-			}
+			if (bits[0] == 1) {swapBits(binInt);}
+			if (bits[1] == 0) {swapBits(binInt);}
+			if (bits[2] == 1) {swapBits(binInt);}
+			if (bits[3] == 0) {swapBits(binInt);}
+			if (bits[4] == 0) {swapBits(binInt);}
+			if (bits[5] == 0) {swapBits(binInt);}
+			if (bits[6] == 1) {swapBits(binInt);}
+			if (bits[7] == 0) {swapBits(binInt);}
 			s++; // next key char
 		}
 		preBin = preBin + std::to_string(binInt);
@@ -131,14 +118,14 @@ void DecryptFile (std::string path, std::string key) {
 	filein.close();
 }
 
-std::string genKey() {
+std::string genKey(long int keysize) {
 	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	char key[64] = "";
+	std::string key = "";
 	std::random_device rand;
 	std::mt19937 rng(rand());
-	for (int i = 0; i<64; i++) {
-		std::uniform_int_distribution<int> dist(1,62);
-		key[i] = alphabet[dist(rand)];
+	for (int i = 0; i < keysize; i++) {
+		std::uniform_int_distribution<int> dist(0,61);
+		key = key + alphabet[dist(rand)];
 	}
 	return key;
 }
@@ -163,14 +150,16 @@ int main() {
 		std::cout << "String to encrypt: ";
 		std::cin.ignore();
 		std::getline(std::cin, inputString);
-		std::cout << "\nEncrypted message (excluding forgings!): '" << toBitAndEncrypt(inputString, key) << "'\n";
+		std::cout << "\nEncrypted message:" << toBitAndEncrypt(inputString, key) << "\n";
+		system("pause");
 	}
 	else if (selectDecEnc == 2 && selectTarget == 1){
 		std::string inputString = "";
 		std::cout << "String to decrypt: ";
 		std::cin.ignore(); 
 		std::getline(std::cin, inputString);
-		std::cout << "\nDecrypted message: " << toStringAndDecrypt(inputString, key);
+		std::cout << "\nDecrypted message: " << toStringAndDecrypt(inputString, key) << '\n';
+		system("pause");
 	}
 	else if (selectDecEnc ==1 && selectTarget == 2) {
 		char confirm = 'n';
@@ -184,6 +173,7 @@ int main() {
 			cryptFile(inputString, key);
 			std::cout << "\nFile succefuly encrypted!\n";
 		} else {std::cout << "\nAbort\n";}
+		system("pause");
 	}
 	else if (selectDecEnc ==2 && selectTarget == 2) {
 		char confirm = 'n';
@@ -197,10 +187,15 @@ int main() {
 			DecryptFile(inputString, key);
 			std::cout << "\nFile succefuly decrypted!\n";
 		} else {std::cout << "\nAbort\n";}
+		system("pause");
 	}
 	else if (selectTarget == 3) {
-		std::string key = genKey();
+		long int* keysize = new long int;
+		std::cout << "Set keysize: ";
+		std::cin >> *keysize;
+		std::string key = genKey(*keysize);
 		std::cout << "\nYour key: " + key + "\n";
+		system("pause");
 	}
 	else {main(); return 0;}
 
