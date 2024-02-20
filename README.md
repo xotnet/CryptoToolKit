@@ -5,7 +5,7 @@ ToolKit for crypt/decrypt messages, files and generate random keys for crypt. Yo
 
 * tested on C++ 13
 
-> [!CAUTION]
+> [!NOTE]
 > Using Alfa or beta CryptoToolKit is unsecure! This is test alfa release for developers. Use last release!
 
 BitCoin DONATION ☕️: ```bc1q24sqqj6p6htuktap2vht2uzna9u7w3wlk8kfwk```
