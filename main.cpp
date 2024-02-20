@@ -18,17 +18,28 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	int i = 0;
 	while (i < preBin.length()) {
 		int binInt = preBin[i] - '0';
+		int cleanBinInt = binInt;
 		int s = 0;
 		while (s < key.length()) { // [ENCRYPTION] encrypting every byte
 			std::bitset<8> bits(key[s]);
-			if (bits[0] == 1) {swapBits(binInt);}
-			if (bits[1] == 0) {swapBits(binInt);}
-			if (bits[2] == 1) {swapBits(binInt);}
-			if (bits[3] == 0) {swapBits(binInt);}
-			if (bits[4] == 0) {swapBits(binInt);}
-			if (bits[5] == 0) {swapBits(binInt);}
-			if (bits[6] == 1) {swapBits(binInt);}
-			if (bits[7] == 0) {swapBits(binInt);}
+			int g = 0;
+			while (cleanBinInt == binInt) {
+				swapBits(binInt);
+				if (bits[0] == binInt) {swapBits(binInt);}
+				if (bits[1] == binInt) {swapBits(binInt);}
+				if (bits[2] == binInt) {swapBits(binInt);}
+				if (bits[3] == binInt) {swapBits(binInt);}
+				if (bits[4] == binInt) {swapBits(binInt);}
+				if (bits[5] == binInt) {swapBits(binInt);}
+				if (bits[6] == binInt) {swapBits(binInt);}
+				if (bits[7] == binInt) {swapBits(binInt);}
+				
+				if (bits[g] == 0) {bits[g] = 1;}
+				else if (bits[g] == 1) {bits[g] = 0;}
+				
+				if (g < 8) {g++;}
+				else {g = 0;}
+			}
 			s++; // next key char
 		}
 		finalBin = finalBin + std::to_string(binInt);
@@ -65,16 +76,27 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 	while (o < toBit8.length()) {
 		int binInt = toBit8[o] - '0';
 		int s = 0;
+		int cleanBinInt = binInt;
 		while (s < key.length()) { // decrypting every byte
 			std::bitset<8> bits(key[s]);
-			if (bits[0] == 1) {swapBits(binInt);}
-			if (bits[1] == 0) {swapBits(binInt);}
-			if (bits[2] == 1) {swapBits(binInt);}
-			if (bits[3] == 0) {swapBits(binInt);}
-			if (bits[4] == 0) {swapBits(binInt);}
-			if (bits[5] == 0) {swapBits(binInt);}
-			if (bits[6] == 1) {swapBits(binInt);}
-			if (bits[7] == 0) {swapBits(binInt);}
+			int g = 0;
+			while (cleanBinInt == binInt) {
+				swapBits(binInt);
+				if (bits[0] == binInt) {swapBits(binInt);}
+				if (bits[1] == binInt) {swapBits(binInt);}
+				if (bits[2] == binInt) {swapBits(binInt);}
+				if (bits[3] == binInt) {swapBits(binInt);}
+				if (bits[4] == binInt) {swapBits(binInt);}
+				if (bits[5] == binInt) {swapBits(binInt);}
+				if (bits[6] == binInt) {swapBits(binInt);}
+				if (bits[7] == binInt) {swapBits(binInt);}
+				
+				if (bits[g] == 0) {bits[g] = 1;}
+				else if (bits[g] == 1) {bits[g] = 0;}
+				
+				if (g < 8) {g++;}
+				else {g = 0;}
+			}
 			s++; // next key char
 		}
 		preBin = preBin + std::to_string(binInt);
@@ -119,12 +141,12 @@ void DecryptFile (std::string path, std::string key) {
 }
 
 std::string genKey(long int keysize) {
-	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/[]()-+";
 	std::string key = "";
 	std::random_device rand;
 	std::mt19937 rng(rand());
 	for (int i = 0; i < keysize; i++) {
-		std::uniform_int_distribution<int> dist(0,61);
+		std::uniform_int_distribution<int> dist(0,68);
 		key = key + alphabet[dist(rand)];
 	}
 	return key;
