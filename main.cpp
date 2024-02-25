@@ -2,10 +2,11 @@
 #include <bitset>
 #include <fstream>
 #include <random>
-void swapBits(int &bit) {
-	if (bit == 1) {bit = 0;}
-	else if (bit == 0) {bit = 1;}
-}
+
+/*
+TODO: add spoof key-based bits for complicate brute-force
+*/
+
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	std::string toChars8bit = "";
 	std::string preBin = "";
