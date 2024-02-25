@@ -3,32 +3,82 @@
 #include <fstream>
 #include <random>
 
-/*
-TODO: add spoof key-based bits for complicate brute-force
-*/
+int genRandom(int from, int upto) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dist(from, upto);
+	return dist(gen);
+}
 
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
-	std::string toChars8bit = "";
-	std::string preBin = "";
+	std::string toChars16bit = "";
+	std::string bitsAfterCrypting = "";
 	for (char c : inputString) { // every char in message
-		std::bitset<8> bits(c); // bitset is container with size 8
+		std::bitset<16> bits(c); // bitset is container with size 16
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
-			std::bitset<8> keyCharToBit(key[u]);
+			std::bitset<16> keyCharToBit(key[u]);
 			bits = bits ^ keyCharToBit;
+			for (int l = 0; l < 16; l++) {
+				if (keyCharToBit[l] == 1) {
+					bits = bits ^ keyCharToBit;
+				}
+			}
 		}
-		toChars8bit = toChars8bit + static_cast<char>(bits.to_ulong());
+		bitsAfterCrypting = bitsAfterCrypting + bits.to_string();
+	} // SPOOFING
+	std::bitset<16> keyCharToBit(key[0]); // first char of key give seed info
+	unsigned short int counterOfSpoofBytes = 0;
+	for (int y = 0; y < keyCharToBit.size(); y++) {
+		if (keyCharToBit[y]) {counterOfSpoofBytes++;};
 	}
-	return toChars8bit;
+	if (keyCharToBit[3] == 1) { // add spoof bits to begin if 4 bit == 1
+		for(int h = 0; h < counterOfSpoofBytes * 16; h++) {bitsAfterCrypting = std::to_string(genRandom(0,1)) + bitsAfterCrypting;}
+	} else { // add to end
+		for(int h = 0; h < counterOfSpoofBytes * 16; h++) {bitsAfterCrypting = bitsAfterCrypting + std::to_string(genRandom(0,1));}
+	}
+	for (int b = 0; b < bitsAfterCrypting.length(); b = b+16) {
+		std::string bitsPreset = "";
+		for (int j = 0; j < 16; j++) {
+			bitsPreset = bitsPreset + bitsAfterCrypting[b+j];
+		}
+		std::bitset<16> bits(bitsPreset);
+		toChars16bit = toChars16bit + static_cast<char>(bits.to_ulong());
+	}
+	return toChars16bit;
 }
 
 std::string toStringAndDecrypt(std::string inputString, std::string key) {
 	std::string toCharFromBin = "";
+	std::string bitsAfterCrypting = "";
 	for (int i = 0; i < inputString.length(); i++) { // every char in encrypted message
-		std::bitset<8> bits(inputString[i]); // convert char to bitset
+		std::bitset<16> bits(inputString[i]); // convert char to bitset
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
-			std::bitset<8> keyCharToBit(key[u]);
+			std::bitset<16> keyCharToBit(key[u]);
 			bits = bits ^ keyCharToBit;
+			for (int l = 0; l < 16; l++) {
+				if (keyCharToBit[l] == 1) {
+					bits = bits ^ keyCharToBit;
+				}
+			}
 		}
+		bitsAfterCrypting = bitsAfterCrypting + bits.to_string();
+	} // CLEAN SPOOFED
+	std::bitset<16> keyCharToBit(key[0]); // first char of key give seed info
+	unsigned short int counterOfSpoofBytes = 0;
+	for (int y = 0; y < 16; y++) {
+		if (keyCharToBit[y]) {counterOfSpoofBytes++;};
+	}
+	if (keyCharToBit[3] == 1) { // remove spoof bits from begin
+		for(int h = 0; h < counterOfSpoofBytes; h++) {bitsAfterCrypting = bitsAfterCrypting.substr(16, bitsAfterCrypting.length()-1);}
+	} else { // remove from end
+		for(int h = 0; h < counterOfSpoofBytes; h++) {bitsAfterCrypting = bitsAfterCrypting.substr(0, bitsAfterCrypting.length()-16);}
+	}
+	for (int b = 0; b < bitsAfterCrypting.length(); b = b+16) {
+		std::string bitsPreset = "";
+		for (int j = 0; j < 16; j++) {
+			bitsPreset = bitsPreset + bitsAfterCrypting[b+j];
+		}
+		std::bitset<16> bits(bitsPreset);
 		toCharFromBin = toCharFromBin + static_cast<char>(bits.to_ulong());
 	}
 	return toCharFromBin;
@@ -57,12 +107,12 @@ void DecryptFile (std::string path, std::string key) {
 }
 
 std::string genKey(long int keysize) {
-	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/[]()-+";
+	char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/[]()-+_%#@!/\\;,.";
 	std::string key = "";
 	std::random_device rand;
 	std::mt19937 rng(rand());
 	for (int i = 0; i < keysize; i++) {
-		std::uniform_int_distribution<int> dist(0,68);
+		std::uniform_int_distribution<int> dist(0,sizeof(alphabet)-1);
 		key = key + alphabet[dist(rand)];
 	}
 	return key;
@@ -80,7 +130,7 @@ int main() {
 		std::cin >> selectDecEnc;
 	}
 	if (selectTarget != 3) {
-		std::cout << "Set key (password 8+ chars): ";
+		std::cout << "Set key (password 16+ chars): ";
 		std::cin >> key;
 	}
 	if (selectDecEnc == 1 && selectTarget == 1) {
