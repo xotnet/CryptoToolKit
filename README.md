@@ -10,6 +10,7 @@
 
 
 **Example input:** ```my secret message is: hello cryptography!```
+
 **Example output (password 1234qwerty):** ```;/v%35$3"v;3%%713v?%lv>3::9v5$/&"91$7&>/w)r├``` 
 
 
