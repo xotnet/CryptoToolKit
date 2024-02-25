@@ -13,18 +13,22 @@ int genRandom(int from, int upto) {
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
 	std::string toChars16bit = "";
 	std::string bitsAfterCrypting = "";
+	int i = 0;
 	for (char c : inputString) { // every char in message
 		std::bitset<16> bits(c); // bitset is container with size 16
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
 			std::bitset<16> keyCharToBit(key[u]);
+			std::bitset<16> indexBitsPool(i);
 			bits = bits ^ keyCharToBit;
 			for (int l = 0; l < 16; l++) {
 				if (keyCharToBit[l] == 1) {
 					bits = bits ^ keyCharToBit;
+					bits = bits ^ indexBitsPool;
 				}
 			}
 		}
 		bitsAfterCrypting = bitsAfterCrypting + bits.to_string();
+		i++;
 	} // SPOOFING
 	std::bitset<16> keyCharToBit(key[0]); // first char of key give seed info
 	unsigned short int counterOfSpoofBytes = 0;
@@ -54,10 +58,12 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 		std::bitset<16> bits(inputString[i]); // convert char to bitset
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
 			std::bitset<16> keyCharToBit(key[u]);
+			std::bitset<16> indexBitsPool(i);
 			bits = bits ^ keyCharToBit;
 			for (int l = 0; l < 16; l++) {
 				if (keyCharToBit[l] == 1) {
 					bits = bits ^ keyCharToBit;
+					bits = bits ^ indexBitsPool;
 				}
 			}
 		}
