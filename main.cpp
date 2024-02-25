@@ -2,12 +2,70 @@
 #include <bitset>
 #include <fstream>
 #include <random>
-
+#include <bigint.h>
 int genRandom(int from, int upto) {
 	std::random_device rd;
-	std::mt19937 gen(rd());
+	std::mt19937_64 gen(rd());
 	std::uniform_int_distribution<> dist(from, upto);
 	return dist(gen);
+}
+bigint gcdExtended(bigint a, bigint b, bigint* x, bigint* y) {
+    if (a == bigint(0)) {
+        *x = 0;
+        *y = 1;
+        return b;
+    }
+
+    bigint x1, y1;
+    bigint gcd = gcdExtended(b % a, a, &x1, &y1);
+
+    *x = y1 - (b / a) * x1;
+    *y = x1;
+
+    return gcd;
+}
+bigint modInverse(bigint e, bigint phiN) {
+	bigint x, y;
+    gcdExtended(e, phiN, &x, &y);
+    bigint d = (x % phiN + phiN) % phiN;
+    return d;
+}
+void generateRsaKey() {
+	char numslist[] = "0123456789";
+	bigint num1(1);
+	bigint num2(1);
+	bigint e(1);
+	while (true) { // gen num1
+		std::string prenum = "1";
+		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
+			prenum = prenum + numslist[genRandom(0, 9)];
+		}
+		num1 = prenum;
+		if (num1 % bigint(2) != bigint(0) && num1 % bigint(3) != bigint(0) &&  num1 % bigint(5) != bigint(0) && num1 % bigint(7) != bigint(0)) {break;}
+		else {continue;}
+	}
+	while (true) { // gen num2
+		std::string prenum = "1";
+		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
+			prenum = prenum + numslist[genRandom(0, 9)];
+		}
+		num2 = prenum;
+		if (num2 % bigint(2) != bigint(0) && num2 % bigint(3) != bigint(0) &&  num2 % bigint(5) != bigint(0) && num2 % bigint(7) != bigint(0)) {break;}
+		else {continue;}
+	}
+	bigint N(num1*num2); // set N
+	bigint phiN = (num1-bigint(1)) * (num2-bigint(1)); //set phi(N)
+	while (true) { // gen e
+		std::string prenum = "1";
+		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
+			prenum = prenum + numslist[genRandom(0, 9)];
+		}
+		e = prenum;
+		if (e % bigint(2) != bigint(0) && e % bigint(3) != bigint(0) &&  e % bigint(5) != bigint(0) && e % bigint(7) != bigint(0) && e < phiN) {break;}
+		else {continue;}
+	}
+	bigint d(modInverse(e, phiN));
+	std::cout << "\nPrivate key: {" << d << ", " << N << "}\nPublic key: {" << e << ", " << N << '\n';
 }
 
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
@@ -31,7 +89,7 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
 		i++;
 	} // SPOOFING
 	std::bitset<16> keyCharToBit(key[0]); // first char of key give seed info
-	unsigned short int counterOfSpoofBytes = 0;
+	unsigned short int counterOfSpoofBytes = 2;
 	for (int y = 0; y < keyCharToBit.size(); y++) {
 		if (keyCharToBit[y]) {counterOfSpoofBytes++;};
 	}
@@ -70,7 +128,7 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 		bitsAfterCrypting = bitsAfterCrypting + bits.to_string();
 	} // CLEAN SPOOFED
 	std::bitset<16> keyCharToBit(key[0]); // first char of key give seed info
-	unsigned short int counterOfSpoofBytes = 0;
+	unsigned short int counterOfSpoofBytes = 2;
 	for (int y = 0; y < 16; y++) {
 		if (keyCharToBit[y]) {counterOfSpoofBytes++;};
 	}
@@ -129,17 +187,17 @@ int main() {
 	short int selectDecEnc;
 	short int selectTarget;
 	std::string key;
-	std::cout << "Select target:\n[1] Message\n[2] File\n[3] Generate key\n: ";
+	std::cout << "Select target:\n[1] Message\n[2] File\n[3] Generate key\n[4] RSA menu\n: ";
 	std::cin >> selectTarget;
-	if (selectTarget != 3) {
+	if (selectTarget < 3) {
 		std::cout << "Select method:\n[1] Encrypt\n[2] Decrypt\n: ";
 		std::cin >> selectDecEnc;
 	}
-	if (selectTarget != 3) {
+	if (selectTarget < 3) { // set key
 		std::cout << "Set key (password 16+ chars): ";
 		std::cin >> key;
 	}
-	if (selectDecEnc == 1 && selectTarget == 1) {
+	if (selectDecEnc == 1 && selectTarget == 1) { // message crypt
 		std::string inputString = "";
 		std::cout << "String to encrypt: ";
 		std::cin.ignore();
@@ -147,7 +205,7 @@ int main() {
 		std::cout << "\nEncrypted message: '" << toBitAndEncrypt(inputString, key) << "'\n";
 		system("pause");
 	}
-	else if (selectDecEnc == 2 && selectTarget == 1){
+	else if (selectDecEnc == 2 && selectTarget == 1){ // file crypt
 		std::string inputString = "";
 		std::cout << "String to decrypt: ";
 		std::cin.ignore(); 
@@ -155,7 +213,7 @@ int main() {
 		std::cout << "\nDecrypted message: " << toStringAndDecrypt(inputString, key) << '\n';
 		system("pause");
 	}
-	else if (selectDecEnc ==1 && selectTarget == 2) {
+	else if (selectDecEnc ==1 && selectTarget == 2) { // message decrypt
 		char confirm = 'n';
 		std::string inputString = "";
 		std::cout << "File path which crypt: ";
@@ -169,7 +227,7 @@ int main() {
 		} else {std::cout << "\nAbort\n";}
 		system("pause");
 	}
-	else if (selectDecEnc ==2 && selectTarget == 2) {
+	else if (selectDecEnc == 2 && selectTarget == 2) { // file decrypt
 		char confirm = 'n';
 		std::string inputString = "";
 		std::cout << "File path which decrypt: ";
@@ -183,7 +241,15 @@ int main() {
 		} else {std::cout << "\nAbort\n";}
 		system("pause");
 	}
-	else if (selectTarget == 3) {
+	else if (selectTarget == 4) { // menu rsa
+		unsigned short int chooseMethod = 0;
+		std::cout << "Select RSA operation\n[1] Generate key pair\n[2] Message Enc/Dec\n[3] File Enc/Dec\n: ";
+		std::cin >> chooseMethod;
+		if (chooseMethod == 1) {
+			generateRsaKey();
+		}
+	}
+	else if (selectTarget == 3) { // gen key
 		long int* keysize = new long int;
 		std::cout << "Set keysize: ";
 		std::cin >> *keysize;
@@ -192,6 +258,5 @@ int main() {
 		system("pause");
 	}
 	else {main(); return 0;}
-
     return 0;
 }
