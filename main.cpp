@@ -9,63 +9,39 @@ int genRandom(int from, int upto) {
 	std::uniform_int_distribution<> dist(from, upto);
 	return dist(gen);
 }
-bigint gcdExtended(bigint a, bigint b, bigint* x, bigint* y) {
-    if (a == bigint(0)) {
-        *x = 0;
-        *y = 1;
-        return b;
+
+void genSharedKey(bigint generator, bigint prime) {
+	std::cout << "Generating your public key...\n";
+	int exponent = genRandom(1001, 10199);
+	int expCopy = exponent;
+	bigint res = 1;
+	while (exponent) {
+        if (exponent & 1) {
+            res *= generator;
+            --exponent;
+        }
+        else {
+            generator *= generator;
+            exponent >>= 1;
+        }
+	}
+	bigint publicKey = res % prime;
+	std::cout << "Send this public key to your friend: " << publicKey << '\n';
+	std::cout << "And then put here public key of your friend: ";
+	bigint friendsKey(0);
+	std::cin >> friendsKey;
+	std::cout << "Generating shared key...\n";
+	bigint result = 1;
+    while (publicKey > bigint(0)) {
+        if (publicKey % bigint(2) == bigint(1)) {
+            result = (result * friendsKey) % prime;
+        }
+        friendsKey = (friendsKey * friendsKey);
+        publicKey = publicKey / bigint(2) % prime;
     }
-
-    bigint x1, y1;
-    bigint gcd = gcdExtended(b % a, a, &x1, &y1);
-
-    *x = y1 - (b / a) * x1;
-    *y = x1;
-
-    return gcd;
-}
-bigint modInverse(bigint e, bigint phiN) {
-	bigint x, y;
-    gcdExtended(e, phiN, &x, &y);
-    bigint d = (x % phiN + phiN) % phiN;
-    return d;
-}
-void generateRsaKey() {
-	char numslist[] = "0123456789";
-	bigint num1(1);
-	bigint num2(1);
-	bigint e(1);
-	while (true) { // gen num1
-		std::string prenum = "1";
-		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
-			prenum = prenum + numslist[genRandom(0, 9)];
-		}
-		num1 = prenum;
-		if (num1 % bigint(2) != bigint(0) && num1 % bigint(3) != bigint(0) &&  num1 % bigint(5) != bigint(0) && num1 % bigint(7) != bigint(0)) {break;}
-		else {continue;}
-	}
-	while (true) { // gen num2
-		std::string prenum = "1";
-		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
-			prenum = prenum + numslist[genRandom(0, 9)];
-		}
-		num2 = prenum;
-		if (num2 % bigint(2) != bigint(0) && num2 % bigint(3) != bigint(0) &&  num2 % bigint(5) != bigint(0) && num2 % bigint(7) != bigint(0)) {break;}
-		else {continue;}
-	}
-	bigint N(num1*num2); // set N
-	bigint phiN = (num1-bigint(1)) * (num2-bigint(1)); //set phi(N)
-	while (true) { // gen e
-		std::string prenum = "1";
-		for (int i = 0; i<genRandom(64, 256); i++) { // set how many int in num, example 60
-			prenum = prenum + numslist[genRandom(0, 9)];
-		}
-		e = prenum;
-		if (e % bigint(2) != bigint(0) && e % bigint(3) != bigint(0) &&  e % bigint(5) != bigint(0) && e % bigint(7) != bigint(0) && e < phiN) {break;}
-		else {continue;}
-	}
-	bigint d(modInverse(e, phiN));
-	std::cout << "\nPrivate key: {" << d << ", " << N << "}\nPublic key: {" << e << ", " << N << '\n';
+	
+	std::cout << "Now only you and your friend have this key: " << result % prime << '\n';
+	system("pause");
 }
 
 std::string toBitAndEncrypt(std::string inputString, std::string key) {
@@ -187,7 +163,7 @@ int main() {
 	short int selectDecEnc;
 	short int selectTarget;
 	std::string key;
-	std::cout << "Select target:\n[1] Message\n[2] File\n[3] Generate key\n[4] RSA menu\n: ";
+	std::cout << "Select target:\n[1] Message\n[2] File\n[3] Generate key\n[4] Asymmetric encryption generate shared key\n: ";
 	std::cin >> selectTarget;
 	if (selectTarget < 3) {
 		std::cout << "Select method:\n[1] Encrypt\n[2] Decrypt\n: ";
@@ -241,13 +217,19 @@ int main() {
 		} else {std::cout << "\nAbort\n";}
 		system("pause");
 	}
-	else if (selectTarget == 4) { // menu rsa
-		unsigned short int chooseMethod = 0;
-		std::cout << "Select RSA operation\n[1] Generate key pair\n[2] Message Enc/Dec\n[3] File Enc/Dec\n: ";
-		std::cin >> chooseMethod;
-		if (chooseMethod == 1) {
-			generateRsaKey();
+	else if (selectTarget == 4) { // menu DH
+		char useThisFunc;
+		std::cout << "Using standart func (6557^x mod 269340000000813779)? [y]es [n]o\n: ";
+		std::cin >> useThisFunc;
+		bigint generator = 6557;
+		bigint prime("269340000000813779");
+		if (useThisFunc == 'n') {
+			std::cout << "Set generator (example: 6557): ";
+			std::cin >> generator;
+			std::cout << "Set prime (example: 269340000000813779): ";
+			std::cin >> prime;
 		}
+		genSharedKey(generator, prime);
 	}
 	else if (selectTarget == 3) { // gen key
 		long int* keysize = new long int;
