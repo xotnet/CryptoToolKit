@@ -10,37 +10,34 @@ int genRandom(int from, int upto) {
 	return dist(gen);
 }
 
-void genSharedKey(bigint generator, bigint prime) {
+void genSharedKey(bigint generator, bigint mod) {
 	std::cout << "Generating your public key...\n";
-	int exponent = genRandom(1001, 10199);
+	int exponent = genRandom(1001, 19999);
 	int expCopy = exponent;
 	bigint res = 1;
-	while (exponent) {
-        if (exponent & 1) {
-            res *= generator;
-            --exponent;
+	while (exponent > 0) {
+        if (exponent % 2 == 1) {
+            res = (res * generator) % mod;
         }
-        else {
-            generator *= generator;
-            exponent >>= 1;
-        }
-	}
-	bigint publicKey = res % prime;
-	std::cout << "Send this public key to your friend: " << publicKey << '\n';
+
+        generator = (generator * generator) % mod;
+        exponent /= 2;
+    }
+	std::cout << "Send this public key to your friend: " << res << '\n';
 	std::cout << "And then put here public key of your friend: ";
 	bigint friendsKey(0);
 	std::cin >> friendsKey;
 	std::cout << "Generating shared key...\n";
 	bigint result = 1;
-    while (publicKey > bigint(0)) {
-        if (publicKey % bigint(2) == bigint(1)) {
-            result = (result * friendsKey) % prime;
+    while (expCopy > 0) {
+        if (expCopy % 2 == 1) {
+            result = (result * friendsKey) % mod;
         }
-        friendsKey = (friendsKey * friendsKey);
-        publicKey = publicKey / bigint(2) % prime;
+
+        friendsKey = (friendsKey * friendsKey) % mod;
+        expCopy /= 2;
     }
-	
-	std::cout << "Now only you and your friend have this key: " << result % prime << '\n';
+	std::cout << "Now only you and your friend have this key: " << result << '\n';
 	system("pause");
 }
 
@@ -219,14 +216,14 @@ int main() {
 	}
 	else if (selectTarget == 4) { // menu DH
 		char useThisFunc;
-		std::cout << "Using standart func (6557^x mod 269340000000813779)? [y]es [n]o\n: ";
+		std::cout << "Using standart func (2^x mod 1234855...0813779)? [y]es [n]o\n: ";
 		std::cin >> useThisFunc;
-		bigint generator = 6557;
-		bigint prime("269340000000813779");
+		bigint generator = 2;
+		bigint prime("123485511584586156518451338151348761034976143912087345616405101640751609146793061235451120934022651288121711545115475478945612354511204754545112093402265128205475454511209340226563155153876118413565164215789113651988419821300813779");
 		if (useThisFunc == 'n') {
 			std::cout << "Set generator (example: 6557): ";
 			std::cin >> generator;
-			std::cout << "Set prime (example: 269340000000813779): ";
+			std::cout << "Set prime (example: 26934813779): ";
 			std::cin >> prime;
 		}
 		genSharedKey(generator, prime);
