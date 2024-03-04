@@ -50,11 +50,22 @@ std::string toBitAndEncrypt(std::string inputString, std::string key) {
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
 			std::bitset<16> keyCharToBit(key[u]);
 			std::bitset<16> indexBitsPool(i);
-			bits = bits ^ keyCharToBit;
+			int pBitsCounter = 0;
+			for (int v=0;v<key.length()*8;v++) { // data to indexBitsPool based on key
+				for (char o : key) {
+					std::bitset<16> bitsOfKeySym(o);
+					for (int ii = 0; ii < 16; ii++) {
+						if (bitsOfKeySym[ii] == 1) {pBitsCounter += 1;}
+					}
+				}
+			}
+			bits = bits ^ keyCharToBit; // xor
+			std::bitset<16> pBitsCounterToBits(pBitsCounter);
+			indexBitsPool = indexBitsPool ^ pBitsCounterToBits;
 			for (int l = 0; l < 16; l++) {
 				if (keyCharToBit[l] == 1) {
-					bits = bits ^ keyCharToBit;
-					bits = bits ^ indexBitsPool;
+					bits = bits ^ keyCharToBit; // xor
+					bits = bits ^ indexBitsPool; // xor
 				}
 			}
 		}
@@ -90,7 +101,18 @@ std::string toStringAndDecrypt(std::string inputString, std::string key) {
 		for (int u = 0; u < key.length(); u++) { // bitset in key char
 			std::bitset<16> keyCharToBit(key[u]);
 			std::bitset<16> indexBitsPool(i);
-			bits = bits ^ keyCharToBit;
+			int pBitsCounter = 0;
+			for (int v=0;v<key.length()*8;v++) { // data to indexBitsPool based on key
+				for (char o : key) {
+					std::bitset<16> bitsOfKeySym(o);
+					for (int ii = 0; ii < 16; ii++) {
+						if (bitsOfKeySym[ii] == 1) {pBitsCounter += 1;}
+					}
+				}
+			}
+			bits = bits ^ keyCharToBit; // xor
+			std::bitset<16> pBitsCounterToBits(pBitsCounter);
+			indexBitsPool = indexBitsPool ^ pBitsCounterToBits;
 			for (int l = 0; l < 16; l++) {
 				if (keyCharToBit[l] == 1) {
 					bits = bits ^ keyCharToBit;
@@ -216,10 +238,10 @@ int main() {
 	}
 	else if (selectTarget == 4) { // menu DH
 		char useThisFunc;
-		std::cout << "Using standart func (2^x mod 1234855...0813779)? [y]es [n]o\n: ";
+		std::cout << "Using standart func (2^x mod 425715642...180309723)? [y]es [n]o\n: ";
 		std::cin >> useThisFunc;
 		bigint generator = 2;
-		bigint prime("123485511584586156518451338151348761034976143912087345616405101640751609146793061235451120934022651288121711545115475478945612354511204754545112093402265128205475454511209340226563155153876118413565164215789113651988419821300813779");
+		bigint prime("42571564251765425471355154626165452473426584864267331571334621325420624815730163446612426143167826542156263");
 		if (useThisFunc == 'n') {
 			std::cout << "Set generator (example: 6557): ";
 			std::cin >> generator;
